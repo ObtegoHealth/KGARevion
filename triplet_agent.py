@@ -49,6 +49,8 @@ def main(args):
     bioKG_agent = KGARevion(args=args)
     
     response = bioKG_agent.call(args.query)
+
+    print("\n\n=== TRIPLETS ===\n\n", response)
     return response
 
 if __name__ == '__main__':
