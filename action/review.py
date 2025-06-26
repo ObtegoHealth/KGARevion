@@ -1,8 +1,8 @@
 import logging
 from utils import BaseLLM
-from .generate import TripletExtraction
-from .revise import Revise
-from .inference_review import ReviewInfer
+from generate import TripletExtraction
+from revise import Revise
+from inference_review import ReviewInfer
 
 
 class Review(object):
