@@ -32,10 +32,12 @@ class KGARevion(object):
     
     def call(self, query):
         logging.info(query)
-        print("query")
         generated_triplets = self.triplets_generator.call(query)
         print(generated_triplets)
         filtered_triplets, score = self.classifier.call(generated_triplets, query)
+        print("\n\n== QUERY ==\n\n", query)
+        print("\n\n== TRIPLETS ==\n\n", generated_triplets)
+        print("\n\n== FILTERED TRIPLETS\n\n", filtered_triplets)
         answer = self.answer_generator.call(filtered_triplets, query)
         logging.info("filtered_triplets are {}".format(filtered_triplets))
         logging.info(answer)
