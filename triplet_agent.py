@@ -20,13 +20,9 @@ class KGARevion(object):
         self.agent_name = "KGARevion"
         self.role = """You can answer questions by choosing Extract_Triplets, KnowledgeGraph_Classifier and Answer_Generator actions. Finish it if you find answer."""
         self.args = args
-        self.llm = BaseLLM(args.llm_name)
+        self.llm = BaseLLM("llama3.1")
         self.triplets_generator = Generate(self.llm, args)
-        if args.llm_name == 'gpt-4-turbo':
-            self.review_llm = BaseLLM('llama3.1')
-        else:
-            self.review_llm = self.llm
-        self.classifier = Review(self.review_llm, args)
+        self.classifier = Review(self.llm, args)
         self.answer_generator = Answer(self.llm)
 
     
@@ -51,7 +47,6 @@ def main(args):
     bioKG_agent = KGARevion(args={
         "max_round": 1,
         "is_revise": True,
-        "llm_name": "llama3.1",
         "weights_path": "fine_tuned_model/"
     })
     
