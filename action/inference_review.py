@@ -12,8 +12,8 @@ import difflib
 from transformers import AutoTokenizer, AutoModel, AutoConfig
 from transformers.modeling_utils import SequenceSummary
 from sklearn.metrics.pairwise import cosine_similarity
-from src.prompter import Prompter
-from src.descriptionTemplate import DescriptionTemplate
+from prompter import Prompter
+from descriptionTemplate import DescriptionTemplate
 
 rel_list = ['protein_protein', 'carrier', 'enzyme', 'target', 'transporter', 'contraindication', 'indication', 'off-label use', 'synergistic interaction', 'associated with', 'parent-child', 'phenotype absent', 'phenotype present', 'side effect', 'interacts with', 'linked to', 'expression present', 'expression absent']
 
@@ -253,9 +253,9 @@ class ReviewInfer(object):
 
 
 if __name__ == '__main__':
-    llm_tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
-    llm_model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct", device_map='auto')
-    model = ReviewInfer(llm_model, llm_tokenizer, "primekg_r64_alpha_16_bz_256_epoch_1_llama3_lr_0.0003_review_ratio_0.2/")
+    # llm_tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+    # llm_model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct", device_map='auto')
+    model = ReviewInfer(model_weights="fine_tuned_model/", model_name="llama3.1")
     print(model.score(['ADH1B', 'protein_protein', 'KIF15']))
     print(model.score(['Clathrin', 'interacts with', 'FAT3 protein']))
     print(model.score(['AHR', 'target', 'TG']))
