@@ -2,7 +2,7 @@ import os
 import re
 import json
 from tqdm import tqdm
-from openai import AzureOpenAI
+# from openai import AzureOpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
@@ -12,12 +12,12 @@ class BaseLLM(object):
         if llm_name.lower() in ['llama3.1', 'llama3']:
             self.llm_tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct")
             self.llm_model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct", device_map='auto')
-        elif llm_name.lower() in ['gpt-4-turbo']:
-            self.client = AzureOpenAI(
-                azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"), # Obtained from the team's key manager
-                api_version="2024-05-01-preview"
-            )
+        # elif llm_name.lower() in ['gpt-4-turbo']:
+        #     self.client = AzureOpenAI(
+        #         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"), # Obtained from the team's key manager
+        #         api_version="2024-05-01-preview"
+        #     )
         else:
             print("Not find LLM!")
     
@@ -53,30 +53,30 @@ class BaseLLM(object):
 
         return generated_text
 
-    def __generate_GPT__(self, query, num_tokens_num):
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": query},
-        ]
+    # def __generate_GPT__(self, query, num_tokens_num):
+    #     messages = [
+    #         {"role": "system", "content": "You are a helpful assistant."},
+    #         {"role": "user", "content": query},
+    #     ]
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.llm_name, # Model deployment name      
-                max_tokens = num_tokens_num,
-                messages=messages
-            )
-        except Exception as e:
-            return 'None'
+    #     try:
+    #         response = self.client.chat.completions.create(
+    #             model=self.llm_name, # Model deployment name      
+    #             max_tokens = num_tokens_num,
+    #             messages=messages
+    #         )
+    #     except Exception as e:
+    #         return 'None'
 
-        return response
+    #     return response
 
     
     def generate(self, query, new_tokens_num):
 
         if self.llm_name in ['llama3.1', 'llama3']:
             return self.__generate_LLM__(query=query, num_tokens_num=new_tokens_num)
-        elif self.llm_name in ['gpt-4-turbo']:
-            return self.__generate_GPT__()
+        # elif self.llm_name in ['gpt-4-turbo']:
+        #     return self.__generate_GPT__()
 
 
 
