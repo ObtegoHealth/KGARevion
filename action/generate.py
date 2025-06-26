@@ -6,9 +6,8 @@ from src.promptTemplate import triplet_prompt_template, triplet_prompt_template_
 
 
 class QueryAnalysis(object):
-    def __init__(self, args, model_name, device):
+    def __init__(self, args, device):
         self.args = args
-        self.model_name = model_name
         self.device = device
 
     def query_identify(self, query):
@@ -31,13 +30,12 @@ class QueryAnalysis(object):
         return query_type, question, content
     
 class TripletExtraction(object):
-    def __init__(self, llm, args, model_name, device):
+    def __init__(self, llm, args, device):
         self.llm = llm
         self.args = args
-        self.model_name = model_name
         self.device = device
         set_seed(42)
-        self.q_type = QueryAnalysis(args, model_name, device)
+        self.q_type = QueryAnalysis(args, device)
     
     def check_entities(self, keys_text):
         
@@ -128,7 +126,7 @@ class Generate(object):
         self.class_name = 'Extract_Triplets'
         self.class_desc = 'Using this action to extract triplets related to query.'
         self.llm = llm
-        self.tripleExtraction = TripletExtraction(llm = self.llm, args = args, model_name=args.llm_name, device='auto')
+        self.tripleExtraction = TripletExtraction(llm = self.llm, args = args, device='auto')
         self.args = args
         
     def call(self, query):
