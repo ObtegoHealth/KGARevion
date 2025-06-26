@@ -136,7 +136,7 @@ def main(args):
 if __name__ == '__main__':
     set_seed(42)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", default='MedDDx', choices=['mmlu', 'medqa', 'pubmedqa', 'bioasq', 'MedDDx', 'MedDDx-Basic', 'MedDDx-Intermediate', 'MedDDx-Expert', 'afrimedqa_v2', 'AfrimedQA-SAQ'], type=str)
+    parser.add_argument("--dataset", default='MedDDx', choices=['mmlu', 'medqa', 'pubmedqa', 'bioasq', 'MedDDx', 'MedDDx-Basic', 'MedDDx-Intermediate', 'MedDDx-Expert', 'afrimedqa_v2', 'AfrimedQA-SAQ', 'tinybench'], type=str)
     parser.add_argument("--key", type=str)
     parser.add_argument("--type", type=str, default='MCQ', choices=['MCQ', 'SAQ'])
     parser.add_argument("--max_round", type=int, default=1)
