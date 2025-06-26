@@ -14,6 +14,7 @@ from transformers.modeling_utils import SequenceSummary
 from sklearn.metrics.pairwise import cosine_similarity
 from prompter import Prompter
 from descriptionTemplate import DescriptionTemplate
+from review import PretrainKGEmbedding, LmToKG
 
 rel_list = ['protein_protein', 'carrier', 'enzyme', 'target', 'transporter', 'contraindication', 'indication', 'off-label use', 'synergistic interaction', 'associated with', 'parent-child', 'phenotype absent', 'phenotype present', 'side effect', 'interacts with', 'linked to', 'expression present', 'expression absent']
 
