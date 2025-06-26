@@ -2,7 +2,7 @@ from transformers import set_seed
 import re
 import json
 import logging
-from src.promptTemplate import triplet_prompt_template, triplet_prompt_template_for_binary_or_maybe, generation_prompt_template
+from promptTemplate import triplet_prompt_template, triplet_prompt_template_for_binary_or_maybe, generation_prompt_template
 
 
 class QueryAnalysis(object):
