@@ -16,7 +16,7 @@ class Review(object):
             self.model = ReviewInfer(model = self.llm.llm_model, tokenizer=self.llm.llm_tokenizer, model_weights = "fine_tuned_model/")
         else:
             self.model = ReviewInfer(model_weights = "fine_tuned_model/", model_name = 'llama3.1')
-        self.is_revise = args.is_revise
+        self.is_revise = True
         if self.is_revise == True: 
             self.revise = Revise(self.llm)
         self.max_round = args.max_round
