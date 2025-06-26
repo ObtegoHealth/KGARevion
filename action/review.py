@@ -1,5 +1,5 @@
 import logging
-from src.utils import BaseLLM
+from utils import BaseLLM
 from .generate import TripletExtraction
 from .revise import Revise
 from .inference_review import ReviewInfer
