@@ -73,7 +73,7 @@ class ReviewInfer(object):
         return umls_to_ddb
     
     def load_model(self, model, model_weights):
-        model = PeftModel.from_pretrained(model, model_weights, device_map="auto", offload_folder="../offload").cuda()
+        model = PeftModel.from_pretrained(model, model_weights, device_map="auto", offload_folder="../offload")
         model.config.pad_token_id = self.tokenizer.eos_token_id
         model = model.eval()
 
