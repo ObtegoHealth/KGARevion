@@ -1,0 +1,23 @@
+name: kgarevion
+channels:
+  - pytorch # for torch / faiss-cpu arm builds
+  - conda-forge # science stack, llvm-openmp, openblas, etc.
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - tqdm
+  - pytorch
+  - torchvision
+  - torchaudio
+  - faiss-cpu
+  - dgl
+  - spacy
+  - pip
+  - pip:
+      - scispacy
+      - nmslib-metabrainz==2.1.3 # universal2 wheel
+      - https://s3.amazonaws.com/allenai-scispacy/models/en_core_sci_sm-0.5.4.tar.gz
