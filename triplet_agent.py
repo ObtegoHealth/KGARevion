@@ -27,12 +27,12 @@ class KGARevion(object):
         else:
             self.review_llm = self.llm
         self.classifier = Review(self.review_llm, args)
-        self.answer_generator = Answer(self.llm)
 
     
     def call(self, query):
-        print("\n\n=== QUERY ===\n\n", query)
         generated_triplets = self.triplets_generator.call(query)
+        print("\n\n=== INITIAL TRIPLETS ===\n\n", generated_triplets)
+
         filtered_triplets, score = self.classifier.call(generated_triplets, query)
        
         return filtered_triplets
@@ -48,10 +48,10 @@ def main(args):
     logging.basicConfig(filename = "triplet_agent.log", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
     bioKG_agent = KGARevion(args=args)
-    print("\n\n=== QUERY ===\n\n", args.query)
+    
     response = bioKG_agent.call(args.query)
 
-    print("\n\n=== TRIPLETS ===\n\n", response)
+    print("\n\n=== REVISED TRIPLETS ===\n\n", response)
     return response
 
 if __name__ == '__main__':
