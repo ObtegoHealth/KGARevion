@@ -90,6 +90,9 @@ class TripletExtraction(object):
     def generated_related_entities(self, query):
 
         q_type, question, answer_option = self.q_type.query_identify(query)
+        print("\n\n=== TYPE ===\n\n", q_type)
+        print("\n\n=== QUESTION ===\n\n", question)
+        print("\n\n=== ANSWER OPTION ===\n\n", answer_option)
         mt = ""
         count = 0
         while mt == "" and count < 5:
