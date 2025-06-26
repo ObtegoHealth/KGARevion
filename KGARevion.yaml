@@ -1,4 +1,4 @@
-name: kgar
+name: python39
 channels:
   - defaults
 dependencies:
@@ -27,7 +27,7 @@ dependencies:
   - openssl=3.0.15=h5eee18b_0
   - pip=23.3.1=py39h06a4308_0
   - pysocks=1.7.1=py39h06a4308_0
-  - python=3.10
+  - python=3.9.19=h955ad1f_0
   - readline=8.2=h5eee18b_0
   - requests=2.32.3=py39h06a4308_0
   - setuptools=68.2.2=py39h06a4308_0
