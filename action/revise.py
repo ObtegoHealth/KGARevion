@@ -1,6 +1,6 @@
 import re
 import json
-from src.promptTemplate import modification_prompt_template
+from promptTemplate import modification_prompt_template
 
 
 class Revise(object):
