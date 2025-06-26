@@ -13,10 +13,10 @@ class Review(object):
         self.args = args
         self.action_desc = 'Using this action to score generated triplets.'
         if self.llm.llm_name in ['llama3.1', 'llama3']:
-            self.model = ReviewInfer(model = self.llm.llm_model, tokenizer=self.llm.llm_tokenizer, model_weights = "fine_tuned_model/")
+            self.model = ReviewInfer(model = self.llm.llm_model, tokenizer=self.llm.llm_tokenizer, model_weights = args.weights_path)
         else:
-            self.model = ReviewInfer(model_weights = "fine_tuned_model/", model_name = 'llama3.1')
-        self.is_revise = True
+            self.model = ReviewInfer(model_weights = args.weights_path, model_name = 'llama3.1')
+        self.is_revise = args.is_revise
         if self.is_revise == True: 
             self.revise = Revise(self.llm)
         self.max_round = args.max_round
