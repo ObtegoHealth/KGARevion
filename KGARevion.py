@@ -7,7 +7,8 @@ import logging
 from src.utils import QADataset, MedDDxLoader, BaseLLM, AfrimedLoader
 from action.generate import Generate
 from action.review import Review
-from action.answer import Answer, AnswerOpen
+from action.answer import Answer
+from action.inference_review import ReviewInfer
 
 set_seed(42)
 
@@ -133,11 +134,19 @@ def main(args):
             f.write(str(r))
             f.write('\n')
 
+def score(args):
+    model = ReviewInfer(model_weights = args.weights_path, model_name = 'llama3.1')
+    print("=== SCORES ===\n\n")
+    print(model.score(['ADH1B', 'protein_protein', 'KIF15']))
+    print(model.score(['Clathrin', 'interacts with', 'FAT3 protein']))
+    print(model.score(['AHR', 'target', 'TG']))
+
 if __name__ == '__main__':
     set_seed(42)
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default='MedDDx', choices=['mmlu', 'medqa', 'pubmedqa', 'bioasq', 'MedDDx', 'MedDDx-Basic', 'MedDDx-Intermediate', 'MedDDx-Expert', 'afrimedqa_v2', 'AfrimedQA-SAQ'], type=str)
     parser.add_argument("--key", type=str)
+    parser.add_argument("--query", type=str)
     parser.add_argument("--type", type=str, default='MCQ', choices=['MCQ', 'SAQ'])
     parser.add_argument("--max_round", type=int, default=1)
     parser.add_argument("--is_revise", type=bool, default=True)
@@ -145,5 +154,5 @@ if __name__ == '__main__':
     parser.add_argument("--llm_name", default='llama3.1', choices=['llama3.1', 'llama3', 'gpt-4-turbo', 'llama3.1-70'], type=str)
     parser.add_argument("--weights_path", type=str, default='fine_tuned_model/')
     args = parser.parse_args()
-    main(args)
+    score(args)
 
