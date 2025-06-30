@@ -64,7 +64,7 @@ class ReviewInfer(object):
         
     def read_primekg_umls(self):
         umls_to_ddb = {}
-        with open('../fine_tuned_model/primeKG_to_umls_cui.csv') as f:
+        with open('fine_tuned_model/primeKG_to_umls_cui.csv') as f:
             elms = pd.read_csv(f)
             entity_id_primekg = elms['entity_index']
             cui_code = elms['cui']
