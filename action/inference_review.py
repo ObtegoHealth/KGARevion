@@ -46,7 +46,7 @@ class ReviewInfer(object):
             self.model = self.load_model(model, model_weights)
         elif model is None and model_name is not None:
             self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct")
-            self.tokenizer.pad_token_id = tokenizer.eos_token_id
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
             self.tokenizer.padding_side = "left"  # Allow batched inference
             model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct", device_map='auto')
             self.model = self.load_model(model, model_weights)
@@ -64,7 +64,7 @@ class ReviewInfer(object):
         
     def read_primekg_umls(self):
         umls_to_ddb = {}
-        with open('primeKG/primeKG_to_umls_cui.csv') as f:
+        with open('../fine_tuned_model/primeKG_to_umls_cui.csv') as f:
             elms = pd.read_csv(f)
             entity_id_primekg = elms['entity_index']
             cui_code = elms['cui']
@@ -73,7 +73,7 @@ class ReviewInfer(object):
         return umls_to_ddb
     
     def load_model(self, model, model_weights):
-        model = PeftModel.from_pretrained(model, model_weights).cuda()
+        model = PeftModel.from_pretrained(model, model_weights, device_map="auto", offload_folder="../offload")
         model.config.pad_token_id = self.tokenizer.eos_token_id 
         model = model.eval()
 
