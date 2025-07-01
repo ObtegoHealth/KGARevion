@@ -1,18 +1,15 @@
 import argparse
-import os
 from transformers import set_seed
 import json
-from tqdm import tqdm
 import logging
 from typing import List, Dict, Any
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 import uvicorn
-from src.utils import QADataset, MedDDxLoader, BaseLLM, AfrimedLoader
-from action.generate import Generate
-from action.review import Review
-from action.answer import Answer
 from action.inference_review import ReviewInfer
+import secrets
+import os
 
 # Global model instance for API
 model_instance = None
@@ -34,6 +31,21 @@ app = FastAPI(
     description="API for scoring knowledge graph triples using KGARevion model",
     version="1.0.0"
 )
+security = HTTPBasic()
+
+USERNAME = os.environ.get("SERVICE_USERNAME")
+PASSWORD = os.environ.get("SERVICE_PASSWORD")
+
+def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, USERNAME)
+    correct_password = secrets.compare_digest(credentials.password, PASSWORD)
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 @app.on_event("startup")
 async def startup_event():
@@ -47,6 +59,7 @@ async def startup_event():
 
 @app.get("/score")
 async def score_triple(
+    user: str = Depends(authenticate),
     query: str = Query(..., description="JSON string containing the triple to score, e.g., '{\"head_entity\": \"ADH1B\", \"relation\": \"protein_protein\", \"tail_entity\": \"KIF15\"}'")
 ) -> ScoreResponse:
     """
