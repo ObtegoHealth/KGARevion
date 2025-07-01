@@ -4,147 +4,167 @@ from transformers import set_seed
 import json
 from tqdm import tqdm
 import logging
+from typing import List, Dict, Any
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel
+import uvicorn
 from src.utils import QADataset, MedDDxLoader, BaseLLM, AfrimedLoader
 from action.generate import Generate
 from action.review import Review
 from action.answer import Answer
 from action.inference_review import ReviewInfer
 
-set_seed(42)
+# Global model instance for API
+model_instance = None
 
+# Pydantic models for API
+class TripleInput(BaseModel):
+    head_entity: str
+    relation: str  
+    tail_entity: str
 
-class KGARevion(object):
-    def __init__(self,
-                 args
-                 ):
-        super().__init__()
-        self.agent_name = "KGARevion"
-        self.role = """You can answer questions by choosing Extract_Triplets, KnowledgeGraph_Classifier and Answer_Generator actions. Finish it if you find answer."""
-        self.args = args
-        self.llm = BaseLLM(args.llm_name)
-        self.triplets_generator = Generate(self.llm, args)
-        if args.llm_name == 'gpt-4-turbo':
-            self.review_llm = BaseLLM('llama3.1')
-        else:
-            self.review_llm = self.llm
-        self.classifier = Review(self.review_llm, args)
-        self.answer_generator = Answer(self.llm)
+class ScoreResponse(BaseModel):
+    result: str
+    confidence: float
+    triple: TripleInput
 
+# FastAPI app
+app = FastAPI(
+    title="KGARevion Scoring API",
+    description="API for scoring knowledge graph triples using KGARevion model",
+    version="1.0.0"
+)
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the model when the API starts"""
+    global model_instance
+    # Use default weights path - you can modify this as needed
+    weights_path = "fine_tuned_model/"
+    print("Loading KGARevion model...")
+    model_instance = ReviewInfer(model_weights=weights_path, model_name='llama3.1')
+    print("Model loaded successfully!")
+
+@app.get("/score")
+async def score_triple(
+    query: str = Query(..., description="JSON string containing the triple to score, e.g., '{\"head_entity\": \"ADH1B\", \"relation\": \"protein_protein\", \"tail_entity\": \"KIF15\"}'")
+) -> ScoreResponse:
+    """
+    Score a knowledge graph triple for factual correctness.
     
-    def call(self, query):
-        logging.info(query)
-        print("query")
-        generated_triplets, mt = self.triplets_generator.call(query)
-        print(generated_triplets)
-        filtered_triplets, score = self.classifier.call(generated_triplets, query)
-        answer = self.answer_generator.call(filtered_triplets, query)
-        logging.info("filtered_triplets are {}".format(filtered_triplets))
-        logging.info(answer)
-       
-        return answer
-
-def main(args):
-
-    ##load llm
-    set_seed(42)
-
-    import gc
-    gc.collect()
-
-    logging.basicConfig(filename = args.dataset + "_test_case_study_multi-choice.log", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-    bioKG_agent = KGARevion(args=args)
-
-    ##load data
-    if args.dataset in ['MedDDx', 'MedDDx-Basic', 'MedDDx-Intermediate', 'MedDDx-Expert']:
-        data = MedDDxLoader(args.dataset)
-    elif args.dataset in ['AfrimedQA-MCQ']:
-        data = AfrimedLoader(args.dataset)
-    else:
-        data = QADataset(args.dataset)
-   
-    accurate_sample_idx = []
-    response_all = []
+    Args:
+        query: JSON string with head_entity, relation, and tail_entity
+        
+    Returns:
+        ScoreResponse with result (True/False), confidence score, and the input triple
+    """
+    global model_instance
     
-    for idx, d in tqdm(enumerate(data),  total=len(data), desc=f'Evaluating data'):
-        
-        if 'text' in d and 'answer' in d:
-            query = d['text']
-            label = d['answer']
-        
-        response = bioKG_agent.call(query)
-        response = response.strip().replace('\n', '').replace('\"', '')
-        
-        logging.info(f'Response: {response}, Label: {label}')
-           
-        predict_answer = 'None'
-        if "Answer: " in response:
-            answer_index = response.find("Answer: ")
-            predict_answer = response[answer_index + len("Answer: "):].strip()[0]
-        
-        
-        if predict_answer not in ['A', 'B', 'C', 'D', 'E'] and label in response:
-            predict_answer = label
-        predict_answer = predict_answer.strip()
-
-        logging.info("predict_answer: {} and correct answer: {}".format(predict_answer, label))
-        
-        if predict_answer == label:
-            accurate_sample_idx.append(idx)
-       
-        response_all.append(response[answer_index + len("Answer: "):].strip())
-
-        
-    if args.type == 'SAQ':
-        from rouge_score import rouge_scorer
-        correct_predictions = []
-        scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
-        for idx, r in enumerate(response_all):
-            results = scorer.score(response, data[idx]['answer'])
-            correct_predictions.append([results['rouge1'].precision, results['rouge1'].recall, results['rouge1'].fmeasure])    
-        import numpy as np
-        correct_predictions = np.array(correct_predictions)
-        print(correct_predictions)
-        print(correct_predictions.shape)
-        correct_predictions = np.sum(correct_predictions, axis=0)
-        print(correct_predictions.shape)
-        metrics_value = correct_predictions / len(response_all)
-        print("metrics_value!!")
-        print(metrics_value)
-        print(f"Rouge: {metrics_value[0]:.2%} {metrics_value[1]:.2%} {metrics_value[2]:.2%}")   
-    elif args.type == 'MCQ':
-        accuracy = len(accurate_sample_idx)/len(response_all)
-        print(accuracy)
-        print(len(accurate_sample_idx))
-        metrics_value = accuracy
+    if model_instance is None:
+        raise HTTPException(status_code=500, detail="Model not initialized")
     
-    with open("results/" + args.dataset + "_" + args.llm_name + "_is_Revision_" + str(args.is_revise) + "_round_" + str(args.max_round) + "_all.txt", 'w') as f:
-        json.dump(args.__dict__, f, indent=2)
-        f.write('\n')
-        f.write("accuracy: {}".format(metrics_value))
-        f.write('\n')
-        f.write("correct task id: ")
-        for a in accurate_sample_idx:
-            f.write(str(a))
-            f.write('\t')
-        f.write('\n')
-        for idx, r in enumerate(response_all):
-            f.write(str(idx))
-            f.write(': ')
-            f.write(str(r))
-            f.write('\n')
+    try:
+        # Parse the query JSON
+        triple_data = json.loads(query)
+        triple_input = TripleInput(**triple_data)
+        
+        # Create the input format expected by the score function
+        score_input = [triple_input.head_entity, triple_input.relation, triple_input.tail_entity]
+        
+        # Get the score
+        result, confidence = model_instance.score(score_input)
+        
+        return ScoreResponse(
+            result=result,
+            confidence=confidence,
+            triple=triple_input
+        )
+        
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid JSON format in query parameter. Expected format: '{\"head_entity\": \"entity1\", \"relation\": \"relation_type\", \"tail_entity\": \"entity2\"}'"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
+@app.post("/score")
+async def score_triple_post(triple: TripleInput) -> ScoreResponse:
+    """
+    Score a knowledge graph triple for factual correctness (POST version).
+    
+    Args:
+        triple: TripleInput object with head_entity, relation, and tail_entity
+        
+    Returns:
+        ScoreResponse with result (True/False), confidence score, and the input triple
+    """
+    global model_instance
+    
+    if model_instance is None:
+        raise HTTPException(status_code=500, detail="Model not initialized")
+    
+    try:
+        # Create the input format expected by the score function
+        score_input = [triple.head_entity, triple.relation, triple.tail_entity]
+        
+        # Get the score
+        result, confidence = model_instance.score(score_input)
+        
+        return ScoreResponse(
+            result=result,
+            confidence=confidence,
+            triple=triple
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "model_loaded": model_instance is not None}
+
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "KGARevion Scoring API",
+        "version": "1.0.0",
+        "endpoints": {
+            "GET /score": "Score a triple using query parameter",
+            "POST /score": "Score a triple using request body",
+            "GET /health": "Health check",
+            "GET /docs": "Interactive API documentation"
+        },
+        "example_usage": {
+            "GET": "/score?query={\"head_entity\": \"ADH1B\", \"relation\": \"protein_protein\", \"tail_entity\": \"KIF15\"}",
+            "POST": {
+                "url": "/score",
+                "body": {
+                    "head_entity": "ADH1B",
+                    "relation": "protein_protein", 
+                    "tail_entity": "KIF15"
+                }
+            }
+        }
+    }
 
 def score(args):
+    """Original score function for command-line usage"""
     model = ReviewInfer(model_weights = args.weights_path, model_name = 'llama3.1')
     print("=== SCORES ===\n\n")
     print(model.score(['ADH1B', 'protein_protein', 'KIF15']))
     print(model.score(['Clathrin', 'interacts with', 'FAT3 protein']))
     print(model.score(['AHR', 'target', 'TG']))
 
+def run_api(host: str = "127.0.0.1", port: int = 8000):
+    """Run the FastAPI server"""
+    uvicorn.run(app, host=host, port=port)
+
 if __name__ == '__main__':
     set_seed(42)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", default='MedDDx', choices=['mmlu', 'medqa', 'pubmedqa', 'bioasq', 'MedDDx', 'MedDDx-Basic', 'MedDDx-Intermediate', 'MedDDx-Expert', 'afrimedqa_v2', 'AfrimedQA-SAQ'], type=str)
     parser.add_argument("--key", type=str)
     parser.add_argument("--query", type=str)
     parser.add_argument("--type", type=str, default='MCQ', choices=['MCQ', 'SAQ'])
@@ -153,6 +173,13 @@ if __name__ == '__main__':
     parser.add_argument("--KG_name", default='primeKG', choices=['UMLS', 'primeKG', 'ogb-biokg'], type=str)
     parser.add_argument("--llm_name", default='llama3.1', choices=['llama3.1', 'llama3', 'gpt-4-turbo', 'llama3.1-70'], type=str)
     parser.add_argument("--weights_path", type=str, default='fine_tuned_model/')
+    parser.add_argument("--api", action="store_true", help="Run as API server")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="API server host")
+    parser.add_argument("--port", type=int, default=8000, help="API server port")
     args = parser.parse_args()
-    score(args)
-
+    
+    if args.api:
+        print(f"Starting FastAPI server on {args.host}:{args.port}")
+        run_api(host=args.host, port=args.port)
+    else:
+        score(args)
