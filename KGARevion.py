@@ -197,9 +197,9 @@ if __name__ == '__main__':
     # parser.add_argument("--KG_name", default='primeKG', choices=['UMLS', 'primeKG', 'ogb-biokg'], type=str)
     # parser.add_argument("--llm_name", default='llama3.1', choices=['llama3.1', 'llama3', 'gpt-4-turbo', 'llama3.1-70'], type=str)
     # parser.add_argument("--weights_path", type=str, default='fine_tuned_model/')
-    # parser.add_argument("--api", action="store_true", help="Run as API server")
-    # parser.add_argument("--host", type=str, default="127.0.0.1", help="API server host")
-    # parser.add_argument("--port", type=int, default=8000, help="API server port")
+    parser.add_argument("--api", action="store_true", help="Run as API server")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="API server host")
+    parser.add_argument("--port", type=int, default=8000, help="API server port")
     args = parser.parse_args()
     
     if args.api:
