@@ -1,4 +1,4 @@
-# import argparse
+import argparse
 from transformers import set_seed
 import json
 # import logging
@@ -188,7 +188,7 @@ def run_api(host: str = "127.0.0.1", port: int = 8000):
 
 if __name__ == '__main__':
     # set_seed(42)
-    # parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     # parser.add_argument("--key", type=str)
     # parser.add_argument("--query", type=str)
     # parser.add_argument("--type", type=str, default='MCQ', choices=['MCQ', 'SAQ'])
@@ -200,10 +200,9 @@ if __name__ == '__main__':
     # parser.add_argument("--api", action="store_true", help="Run as API server")
     # parser.add_argument("--host", type=str, default="127.0.0.1", help="API server host")
     # parser.add_argument("--port", type=int, default=8000, help="API server port")
-    # args = parser.parse_args()
+    args = parser.parse_args()
     
-    # if args.api:
+    if args.api:
         print(f"Starting FastAPI server on {args.host}:{args.port}")
         run_api(host=args.host, port=args.port)
-    # else:
-    #     score(args)
+
